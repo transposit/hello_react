@@ -1,9 +1,11 @@
 ({ http_event }) => {
-  let {user_id, team_id, response_url} = http_event.parsed_body;
+  const parsed_body = http_event.parsed_body;
+  const workspaceId = parsed_body.team_id;
+  const userId = parsed_body.user_id;
+
   setImmediate(() => {
-    let user = `${team_id}:${user_id}`;
+    let user = api.user({type: "slack", workspaceId, userId});
     let message = api.run('this.get_slack_message', {user})[0];
-    console.log(message);
     api.run("slack_webhook.post_to_response_url", {
       response_url: response_url,
       post_body: message
