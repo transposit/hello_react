@@ -1,92 +1,74 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-
-  <!-- jQuery -->
-  <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-
-  <!-- Transposit SDK -->
-  <script src="https://unpkg.com/transposit@^0.7.7/dist/bundle.prod.js"></script>
-  <script>
-    // These variables in triple curly braces are dynamically injected by Transposit and should not be modified
-    const maintainer = "{{{maintainer}}}";
-    const applicationName = "{{{applicationName}}}";
-    const host = "{{{host}}}";
-    const transposit = new Transposit.Transposit(maintainer, applicationName, host);
-  </script>
-</head>
-<body class="bg-light">
-  <div class="container mt-3 mt-md-5">
-    <svg class="float-md-right ml-md-3" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
-      <g fill-rule="nonzero" fill="none">
-        <circle fill="#94D8E8" cx="32" cy="32" r="32"/>
-        <path d="M32 54V30" stroke="#89695E" stroke-width="4"/>
-        <circle fill="#26B25E" cx="32" cy="24" r="12"/>
-        <path d="M32 46l9-9" stroke="#89695E" stroke-width="4"/>
-        <circle fill="#1D8A48" cx="42" cy="36" r="6"/>
-      </g>
-    </svg>
-    <h1>Hello, world!</h1>
-    <p class="text-secondary">
-      There's lots of ways to say "Hello, world"!
-    </p>
-  </div>
-  <div class="container mt-3 mt-md-5">
-    <div id="loading" class="alert alert-warning" role="alert">
-      Loading...
-    </div>
-    <div id="failure" class="alert alert-warning" role="alert">
-      Operation failed. See JavaScript console.
-    </div>
-    <div id="success" class="card">
-      <h5 class="card-header">Results</h5>
-      <div id="results" class="card-body">
-        <!-- Results written here -->
-      </div>
-    </div>
-  </div>
-  <script>
-    $("#failure").hide();
-    $("#success").hide();
-
-    transposit.runOperation("hello_world")
-      .then((response) => {
-        if (response.status !== "SUCCESS") {
-          throw response;
+{
+  "v2": {
+    "transposit": {
+      "dependencies": [{
+        "name": "transposit/slack:v2.*.*",
+        "alias": "slack"
+      }, {
+        "name": "transposit/slack_webhook:v1.*.*",
+        "alias": "slack_webhook"
+      }],
+      "operations": [{
+        "id": "webhook",
+        "function": {
+          "parameters": [{
+            "name": "http_event",
+            "default": {
+              "text": "{   \"query_parameters\": {     \"api_key\": \"XXX\"   },   \"http_method\": \"POST\",   \"parsed_body\": {     \"channel_name\": \"XXX\",     \"user_id\": \"UXXX\",     \"user_name\": \"iggy\",     \"trigger_id\": \"XXX\",     \"team_domain\": \"my_domain\",     \"team_id\": \"TXXX\",     \"text\": \"\",     \"channel_id\": \"DXXX\",     \"command\": \"/test\",     \"token\": \"XXX\",     \"response_url\": \"https://hooks.slack.com/commands/TXXX/XXX/XXX\"   },   \"body\": \"token=XXX&team_id=TXXX&team_domain=my_domain&channel_id=DXXX&channel_name=XXX&user_id=UXXX&user_name=iggy&command=%2Ftest&text=&response_url=https%3A%2F%2Fhooks.slack.com%2Fcommands%2FTXXX%2FXXX%2FXXX&trigger_id=XXX\" }"
+            },
+            "type": "OBJECT"
+          }],
+          "js": "webhook.js"
+        },
+        "access": {
+          "requireApiKey": true,
+          "webhook": true
         }
-
-        const results = response.result.results;
-
-        if (results.length === 0) {
-          $("#results").text("None");
-        } else {
-          const resultsHtml = $("<ul>").addClass("list-group");
-          for (const result of results) {
-            resultsHtml.append(
-                $("<li>").addClass("list-group-item").text(result.message)
-            );
+      }, {
+        "id": "get_slack_message",
+        "function": {
+          "parameters": [{
+            "name": "user",
+            "type": "STRING"
+          }],
+          "js": "get_slack_message.js"
+        }
+      }, {
+        "id": "test_post_message",
+        "tql": {
+          "tql": "-- This SQL operation is useful to test the message you've\n-- constructed for your webhook. If you provide a Slack\n-- auth in \"Auth & user settings\", it will post a message\n-- to your Slackbot channel.\nSELECT * FROM slack.post_chat_message AS A\nJOIN this.get_slack_message AS B\nON A.$body.blocks = B.blocks\nAND A.$body.text = B.text\nWHERE A.$body.channel = (SELECT user_id from slack.test_auth)"
+        }
+      }],
+      "dataConnections": [{
+        "ref": "slack_identify.raw",
+        "overrides": {
+          "swagger": {
+            "oauthConfig": {
+              "scope": "identity.basic"
+            },
+            "executionLimits": {
+            }
           }
-          $("#results").append(resultsHtml);
+        },
+        "title": "Slack",
+        "description": "Used to identify you on Slack"
+      }, {
+        "ref": "slack_bot.raw",
+        "overrides": {
+          "swagger": {
+            "oauthConfig": {
+              "scope": "chat:write:bot"
+            },
+            "executionLimits": {
+            }
+          }
         }
-
-        $("#loading").hide();
-        $("#success").show();
-      })
-      .catch((response) => {
-        if (response.requestId) {
-          console.log(`Experienced an error running an operation! View the debug logs here: ${host}/t/${maintainer}/${applicationName}/monitor/${response.requestId}`);
-        } else {
-          console.log(`The operation did not run at all. Try again, or check the deployment configurations if the problem persists: ${host}/t/${maintainer}/${applicationName}/deploy`);
-        }
-
-        $("#loading").hide();
-        $("#failure").show();
-      });
-  </script>
-</body>
-</html>
+      }, {
+        "ref": "slack.raw"
+      }],
+      "javascriptAPIVersion": "3",
+      "source": "src",
+      "userSettingsDisplay": "GENERATED"
+    }
+  }
+}
