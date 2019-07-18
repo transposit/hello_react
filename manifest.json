@@ -69,6 +69,8 @@
       "javascriptAPIVersion": "3",
       "source": "src",
       "userSettingsDisplay": "GENERATED"
-    }
+    },
+    "description": "Authorize this connection if you want to call Slack APIs.",
+    "displayName": "Slack"
   }
 }
