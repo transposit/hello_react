@@ -72,7 +72,7 @@
       "source": "src",
       "userSettingsDisplay": "GENERATED"
     },
-    "description": "Authorize this connection if you want to call Slack APIs.",
-    "displayName": "Slack"
+    "description": "Sample application that is configured for working with Slack webhooks. Please check out our Quickstart for more info. ",
+    "displayName": "Sample Transposit Application"
   }
 }
