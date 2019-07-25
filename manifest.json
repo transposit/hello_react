@@ -71,8 +71,6 @@
       "javascriptAPIVersion": "3",
       "source": "src",
       "userSettingsDisplay": "GENERATED"
-    },
-    "description": "Sample application that is configured for working with Slack webhooks. Please check out our Quickstart for more info. ",
-    "displayName": "Sample Transposit Application"
+    }
   }
 }
