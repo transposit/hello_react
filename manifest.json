@@ -47,6 +47,9 @@
         "function": {
           "js": "hello.js",
           "lang": "js"
+        },
+        "access": {
+          "requireUser": true
         }
       }],
       "dataConnections": [{
